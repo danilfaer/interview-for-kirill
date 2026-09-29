@@ -1,0 +1,44 @@
+.skeleton {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.line,
+.lineShort {
+  height: 12px;
+  border-radius: var(--radius-s);
+  background: linear-gradient(
+    90deg,
+    var(--color-neutral-soft) 25%,
+    var(--color-surface-muted) 50%,
+    var(--color-neutral-soft) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+.line {
+  width: 70%;
+}
+
+.lineShort {
+  width: 40%;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}

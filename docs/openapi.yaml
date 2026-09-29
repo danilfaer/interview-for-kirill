@@ -1,0 +1,151 @@
+openapi: 3.0.3
+info:
+  title: Кабинет сотрудника — уведомления
+  version: 0.3.0
+  description: |
+    API уведомлений для главной страницы кабинета.
+    Все запросы выполняются от имени текущего пользователя, сессия передаётся в cookie.
+  contact:
+    name: Дмитрий Зуев, команда бэкенда
+    email: d.zuev@staff-portal.example
+  license:
+    name: Proprietary
+    url: https://staff-portal.example/license
+
+servers:
+  - url: /api
+    description: Тот же хост, что и у фронтенда
+
+tags:
+  - name: Notifications
+    description: Уведомления пользователя
+
+security:
+  - sessionCookie: []
+
+paths:
+  /notifications:
+    get:
+      tags: [Notifications]
+      operationId: listNotifications
+      summary: Список уведомлений
+      description: Возвращает уведомления текущего пользователя.
+      parameters:
+        - name: status
+          in: query
+          description: Какие уведомления вернуть.
+          schema:
+            type: string
+            enum: [all, unread]
+            default: all
+        - name: limit
+          in: query
+          description: Сколько уведомлений вернуть.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+        - name: offset
+          in: query
+          description: Сколько уведомлений пропустить от начала списка.
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Список уведомлений.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationList'
+              example:
+                items:
+                  - id: ntf_2040
+                    type: error
+                    priority: high
+                    title: Доступ к VPN будет отключён через 2 дня
+                    body: Срок действия сертификата истекает. Перевыпустите его в разделе «Безопасность».
+                    isRead: false
+                    createdAt: '2026-09-29T09:35:00Z'
+                  - id: ntf_2031
+                    type: warning
+                    priority: high
+                    title: Согласуйте отпуск Марии Кузнецовой до конца дня
+                    body: null
+                    isRead: false
+                    createdAt: '2026-09-29T07:00:00Z'
+                  - id: ntf_2038
+                    type: system
+                    priority: normal
+                    title: Плановые работы в ночь на субботу
+                    body: С 01:00 до 04:00 по московскому времени кабинет будет недоступен.
+                    isRead: true
+                    createdAt: '2026-09-29T09:00:00Z'
+                unreadCount: 6
+
+  /notifications/{id}/read:
+    post:
+      tags: [Notifications]
+      operationId: markNotificationRead
+      summary: Отметить уведомление прочитанным
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Идентификатор уведомления.
+          schema:
+            type: string
+          example: ntf_2040
+      responses:
+        '200':
+          description: OK
+
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: session
+
+  schemas:
+    NotificationList:
+      type: object
+      required: [items, unreadCount]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
+        unreadCount:
+          type: integer
+          minimum: 0
+          description: Сколько всего непрочитанных уведомлений у пользователя.
+
+    Notification:
+      type: object
+      required: [id, type, priority, title, body, isRead, createdAt]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [info, warning, error, system]
+          description: Тип уведомления, от него зависит иконка.
+        priority:
+          type: string
+          enum: [low, normal, high]
+        title:
+          type: string
+          maxLength: 200
+        body:
+          type: string
+          maxLength: 1000
+          description: Текст уведомления.
+        isRead:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+          description: Время создания, UTC.
